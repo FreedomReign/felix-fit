@@ -28,7 +28,7 @@
     body { background-color: #f8fafc; }
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     .svg-muscle { transition: fill 0.3s ease-in-out, opacity 0.2s; }
-    .svg-muscle:hover { opacity: 0.8; }
+    .svg-muscle:hover { opacity: 0.7; }
     .circular-chart { display: block; margin: 0 auto; max-width: 80%; max-height: 250px; }
     .circle-bg { fill: none; stroke: #e2e8f0; stroke-width: 2.5; }
     .circle { fill: none; stroke-width: 2.5; stroke-linecap: round; transition: stroke-dasharray 1s ease-out, stroke 0.5s ease; }
@@ -39,7 +39,7 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* Muscle checkbox styles */
+    /* Muscle/Supplement checkbox styles */
     .muscle-cb:checked + span, .supp-cb:checked + span { background-color: #0ea5e9; color: white; border-color: #0ea5e9; }
   </style>
 </head>
@@ -64,14 +64,15 @@
           <i class="fa-solid fa-rotate animate-spin" id="sync-icon"></i>
           <span id="sync-text">Syncing...</span>
         </div>
-        <button onclick="promptDeduplicate()" class="text-brand-100 hover:text-white transition-colors" title="Clean Duplicates">
+        <button onclick="promptDeduplicate()" class="text-brand-100 hover:text-white transition-colors cursor-pointer" title="Clean Duplicates">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
         </button>
-        <button onclick="manualRefresh()" class="md:hidden text-brand-100 hover:text-white" title="Refresh">
+        <button onclick="manualRefresh()" class="md:hidden text-brand-100 hover:text-white cursor-pointer" title="Refresh">
           <i class="fa-solid fa-rotate-right"></i>
         </button>
       </div>
     </div>
+    
     <!-- Mobile Nav -->
     <div class="md:hidden border-t border-brand-800 flex">
       <button onclick="switchTab('dashboard')" id="nav-mobile-dashboard" class="flex-1 py-3 text-sm font-medium border-b-2 border-brand-400 text-white">Dashboard</button>
@@ -81,20 +82,20 @@
 
   <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 relative">
     
-    <!-- Toast Notification Container (Pointer Events None to prevent overlap blocking clicks) -->
+    <!-- Toast Notification Container (pointer-events-none to prevent blocking clicks) -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- Custom Hover Tooltip -->
     <div id="muscle-tooltip" class="fixed z-[999] bg-slate-800 text-slate-50 text-xs font-medium px-3 py-2 rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-150 whitespace-pre-line leading-relaxed border border-slate-700"></div>
 
-    <!-- Custom Confirmation Modal (Strict hidden toggle) -->
+    <!-- Custom Confirmation Modal -->
     <div id="custom-confirm" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999] hidden items-center justify-center opacity-0 transition-opacity duration-200">
        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl transform scale-95 transition-transform duration-200" id="custom-confirm-box">
           <h3 id="confirm-title" class="text-lg font-bold text-slate-800 mb-2">Confirm</h3>
           <p id="confirm-msg" class="text-sm text-slate-600 mb-6">Are you sure?</p>
           <div class="flex justify-end gap-3">
              <button onclick="closeConfirm()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">Cancel</button>
-             <button id="confirm-yes-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 transition-colors cursor-pointer">Confirm</button>
+             <button id="confirm-yes-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors cursor-pointer">Confirm</button>
           </div>
        </div>
     </div>
@@ -150,15 +151,25 @@
         </div>
 
         <!-- Muscle Heatmap Widget -->
-        <div class="glass-card rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2">
+        <div class="glass-card rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2 relative">
           <div class="flex justify-between items-center mb-2">
             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
               <i class="fa-solid fa-fire text-orange-500"></i> Muscle Recovery Heatmap
             </h2>
+            <div class="flex gap-2 items-center">
+                <button onclick="document.getElementById('heatmap-legend').classList.toggle('hidden')" class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2 cursor-pointer border border-slate-200 shadow-sm relative z-30">
+                  <i class="fa-solid fa-palette"></i> <span class="hidden sm:inline">Legend</span>
+                </button>
+                <select id="heatmap-timeframe" onchange="updateHeatmap()" class="text-xs border-slate-200 rounded-lg text-slate-600 bg-slate-50 px-2 py-1.5 shadow-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-200 cursor-pointer relative z-30">
+                  <option value="7">Last 7 Days</option>
+                  <option value="14">Last 14 Days</option>
+                  <option value="30">Last 30 Days</option>
+                </select>
+            </div>
           </div>
-          <p class="text-xs text-slate-500 mb-4">Hover for details. Click any muscle to manually change its color, or use swatches to edit standard defaults.</p>
+          <p class="text-xs text-slate-500 mb-4">Hover for details. Click any muscle to manually change its color.</p>
           
-          <div class="flex flex-col md:flex-row items-center gap-8 justify-center h-64">
+          <div class="flex items-center justify-center h-64 relative">
             <!-- Simplified Stylized Body SVG -->
             <svg viewBox="0 0 200 300" class="h-full drop-shadow-sm">
               <circle id="muscle-Cardio" cx="100" cy="30" r="20" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Cardio')" />
@@ -175,24 +186,32 @@
               <rect id="muscle-Triceps" x="30" y="115" width="16" height="50" rx="8" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Triceps')" />
               <rect id="muscle-Triceps-R" x="154" y="115" width="16" height="50" rx="8" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Triceps')" />
               
-              <!-- Legs -->
-              <path id="muscle-Legs" d="M 75 160 L 65 240 L 95 240 L 98 165 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Legs')" />
-              <path id="muscle-Legs-R" d="M 125 160 L 135 240 L 105 240 L 102 165 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Legs')" />
-              <path id="muscle-Legs-Calf" d="M 65 240 L 70 290 L 90 290 L 95 240 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Legs')" />
-              <path id="muscle-Legs-Calf-R" d="M 135 240 L 130 290 L 110 290 L 105 240 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Legs')" />
+              <!-- Quadriceps / Hamstrings (Thigh area) -->
+              <path id="muscle-Quadriceps" d="M 75 160 L 65 240 L 95 240 L 98 165 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Quadriceps')" />
+              <path id="muscle-Quadriceps-R" d="M 125 160 L 135 240 L 105 240 L 102 165 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Quadriceps')" />
+              
+              <!-- Calves -->
+              <path id="muscle-Calves" d="M 65 240 L 70 290 L 90 290 L 95 240 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Calves')" />
+              <path id="muscle-Calves-R" d="M 135 240 L 130 290 L 110 290 L 105 240 Z" class="svg-muscle fill-heatmap-none stroke-slate-400 stroke-2 cursor-pointer" onclick="handleMuscleClick('Calves')" />
             </svg>
 
-            <!-- Heatmap Legend -->
-            <div class="flex flex-col gap-3 text-sm">
-              <div class="flex items-center gap-2" title="Freshly worked out"><input type="color" id="color-red" value="#ef4444" onchange="updateHeatmapColor('red', this.value)" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent pointer-events-auto"> &lt; 12 hrs (Day of)</div>
-              <div class="flex items-center gap-2" title="Recovering"><input type="color" id="color-yellow" value="#fcd34d" onchange="updateHeatmapColor('yellow', this.value)" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent pointer-events-auto"> 12 - 48 hrs</div>
-              <div class="flex items-center gap-2" title="Mostly Recovered"><input type="color" id="color-green" value="#22c55e" onchange="updateHeatmapColor('green', this.value)" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent pointer-events-auto"> 48 - 72 hrs</div>
-              <div class="flex items-center gap-2" title="Fully Recovered"><input type="color" id="color-blue" value="#3b82f6" onchange="updateHeatmapColor('blue', this.value)" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent pointer-events-auto"> 72 - 96 hrs</div>
-              <div class="flex items-center gap-2" title="Inactive"><input type="color" id="color-grey" value="#e2e8f0" onchange="updateHeatmapColor('grey', this.value)" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent pointer-events-auto"> &gt; 96 hrs</div>
-              
-              <!-- Clear overrides button (hidden by default) -->
-              <div id="clear-overrides-container" class="mt-2 hidden">
-                <button onclick="clearMuscleOverrides()" class="text-xs font-semibold text-slate-500 hover:text-red-500 transition-colors bg-slate-100 px-3 py-1.5 rounded-md cursor-pointer"><i class="fa-solid fa-eraser mr-1"></i> Clear Manual Colors</button>
+            <!-- Collapsible Heatmap Legend -->
+            <div id="heatmap-legend" class="hidden absolute top-2 right-2 bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl rounded-xl p-3 z-40 transition-all min-w-[150px]">
+              <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-1">
+                 <span class="text-xs font-bold text-slate-700">Legend</span>
+                 <button onclick="document.getElementById('heatmap-legend').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="flex flex-col gap-2 text-[11px] text-slate-600 font-medium">
+                <div class="flex items-center gap-2" title="Freshly worked out"><input type="color" id="color-red" value="#ef4444" onchange="updateHeatmapColor('red', this.value)" class="w-4 h-4 rounded cursor-pointer border border-slate-200 p-0 bg-transparent pointer-events-auto"> &lt; 12 hrs</div>
+                <div class="flex items-center gap-2" title="Recovering"><input type="color" id="color-yellow" value="#fcd34d" onchange="updateHeatmapColor('yellow', this.value)" class="w-4 h-4 rounded cursor-pointer border border-slate-200 p-0 bg-transparent pointer-events-auto"> 12 - 48 hrs</div>
+                <div class="flex items-center gap-2" title="Mostly Recovered"><input type="color" id="color-green" value="#22c55e" onchange="updateHeatmapColor('green', this.value)" class="w-4 h-4 rounded cursor-pointer border border-slate-200 p-0 bg-transparent pointer-events-auto"> 48 - 72 hrs</div>
+                <div class="flex items-center gap-2" title="Fully Recovered"><input type="color" id="color-blue" value="#3b82f6" onchange="updateHeatmapColor('blue', this.value)" class="w-4 h-4 rounded cursor-pointer border border-slate-200 p-0 bg-transparent pointer-events-auto"> 72 - 96 hrs</div>
+                <div class="flex items-center gap-2" title="Inactive"><input type="color" id="color-grey" value="#e2e8f0" onchange="updateHeatmapColor('grey', this.value)" class="w-4 h-4 rounded cursor-pointer border border-slate-200 p-0 bg-transparent pointer-events-auto"> &gt; 96 hrs</div>
+                
+                <!-- Clear overrides button -->
+                <div id="clear-overrides-container" class="mt-1 hidden">
+                  <button onclick="clearMuscleOverrides()" class="w-full text-center font-bold text-red-500 hover:bg-red-50 transition-colors bg-slate-50 px-2 py-1.5 rounded-md cursor-pointer border border-red-100">Reset Colors</button>
+                </div>
               </div>
             </div>
           </div>
@@ -201,7 +220,6 @@
 
       <!-- Middle Grid: Charts -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Calories Chart -->
         <div class="glass-card rounded-2xl shadow-sm border border-slate-200 p-6">
           <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
             <i class="fa-solid fa-utensils text-green-500"></i> Nutrition 7-Day Trend
@@ -211,7 +229,6 @@
           </div>
         </div>
 
-        <!-- Workouts Chart -->
         <div class="glass-card rounded-2xl shadow-sm border border-slate-200 p-6">
           <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
             <i class="fa-solid fa-dumbbell text-purple-500"></i> Activity Overview
@@ -294,7 +311,7 @@
               </div>
 
               <div class="pt-4" id="form-action-buttons">
-                <!-- IMPORTANT: cursor-pointer, relative, and z-20 added to prevent invisible overlap blocks -->
+                <!-- IMPORTANT: cursor-pointer, relative, z-20 added -->
                 <button type="submit" id="submit-btn" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all cursor-pointer relative z-20 disabled:opacity-50 disabled:cursor-not-allowed">
                   <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save Entry
                 </button>
@@ -349,12 +366,26 @@
       editingEntry: null
     };
 
+    // Constant definition of standard SVG maps
     const svgMap = {
       'Cardio': ['muscle-Cardio'], 'Shoulders': ['muscle-Shoulders'], 'Chest': ['muscle-Chest'],
       'Back': ['muscle-Back'], 'Abs': ['muscle-Abs'], 'Biceps': ['muscle-Biceps', 'muscle-Biceps-R'],
-      'Triceps': ['muscle-Triceps', 'muscle-Triceps-R'], 'Legs': ['muscle-Legs', 'muscle-Legs-R', 'muscle-Legs-Calf', 'muscle-Legs-Calf-R']
+      'Triceps': ['muscle-Triceps', 'muscle-Triceps-R'], 
+      'Quadriceps': ['muscle-Quadriceps', 'muscle-Quadriceps-R'],
+      'Hamstrings': ['muscle-Quadriceps', 'muscle-Quadriceps-R'], // Front view proxy uses thigh graphic
+      'Calves': ['muscle-Calves', 'muscle-Calves-R']
     };
 
+    // Helper to dynamically unpack group names
+    function getConstituentMuscles(muscleName) {
+      const mLower = muscleName.toLowerCase();
+      if (mLower === 'legs') return ['Quadriceps', 'Hamstrings', 'Calves'];
+      if (mLower === 'arms') return ['Biceps', 'Triceps'];
+      if (mLower === 'core') return ['Abs'];
+      return [muscleName]; // Fallback to whatever string was given
+    }
+
+    // --- UTILITIES ---
     function getNowISO() { 
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -371,7 +402,6 @@
       }
     }
 
-    // --- MODALS & ALERTS ---
     function showToast(message, type = 'success') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
@@ -404,7 +434,6 @@
         const modal = document.getElementById('custom-confirm');
         const box = document.getElementById('custom-confirm-box');
         
-        // Ensure flex is added AFTER removing hidden so it doesn't break
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         
@@ -415,9 +444,7 @@
 
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', () => {
-            if(confirmCallback) confirmCallback();
-        });
+        newBtn.addEventListener('click', () => { if(confirmCallback) confirmCallback(); });
     }
 
     function closeConfirm() {
@@ -442,37 +469,23 @@
       container.className = 'flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ';
       
       if (status === 'syncing') {
-        icon.classList.add('fa-rotate', 'animate-spin');
-        text.textContent = 'Syncing...';
-        container.classList.add('bg-brand-800', 'text-brand-100');
+        icon.classList.add('fa-rotate', 'animate-spin'); text.textContent = 'Syncing...'; container.classList.add('bg-brand-800', 'text-brand-100');
       } else if (status === 'success') {
-        icon.classList.add('fa-check');
-        text.textContent = 'Synced';
-        container.classList.add('bg-emerald-800', 'text-emerald-100');
+        icon.classList.add('fa-check'); text.textContent = 'Synced'; container.classList.add('bg-emerald-800', 'text-emerald-100');
         setTimeout(() => setSyncStatus('idle'), 3000);
       } else if (status === 'error') {
-        icon.classList.add('fa-triangle-exclamation');
-        text.textContent = 'Error';
-        container.classList.add('bg-red-800', 'text-red-100');
+        icon.classList.add('fa-triangle-exclamation'); text.textContent = 'Error'; container.classList.add('bg-red-800', 'text-red-100');
       } else {
-        icon.classList.add('fa-cloud');
-        text.textContent = 'Cloud Ready';
-        container.classList.add('bg-brand-800', 'text-brand-100');
+        icon.classList.add('fa-cloud'); text.textContent = 'Cloud Ready'; container.classList.add('bg-brand-800', 'text-brand-100');
       }
     }
 
-    // --- NAVIGATION & EDITING ---
     function switchTab(tab) {
       document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'dashboard');
       document.getElementById('view-tracking').classList.toggle('hidden', tab !== 'tracking');
       
-      document.getElementById('nav-dashboard').className = tab === 'dashboard' 
-        ? 'px-4 py-1.5 text-sm font-medium rounded-md bg-brand-600 shadow-sm transition-all text-white'
-        : 'px-4 py-1.5 text-sm font-medium rounded-md hover:bg-brand-800 transition-all text-brand-100';
-      document.getElementById('nav-tracking').className = tab === 'tracking'
-        ? 'px-4 py-1.5 text-sm font-medium rounded-md bg-brand-600 shadow-sm transition-all text-white'
-        : 'px-4 py-1.5 text-sm font-medium rounded-md hover:bg-brand-800 transition-all text-brand-100';
-        
+      document.getElementById('nav-dashboard').className = tab === 'dashboard' ? 'px-4 py-1.5 text-sm font-medium rounded-md bg-brand-600 shadow-sm transition-all text-white' : 'px-4 py-1.5 text-sm font-medium rounded-md hover:bg-brand-800 transition-all text-brand-100';
+      document.getElementById('nav-tracking').className = tab === 'tracking' ? 'px-4 py-1.5 text-sm font-medium rounded-md bg-brand-600 shadow-sm transition-all text-white' : 'px-4 py-1.5 text-sm font-medium rounded-md hover:bg-brand-800 transition-all text-brand-100';
       if (tab === 'dashboard') updateDashboard();
     }
 
@@ -483,10 +496,7 @@
       document.getElementById('tracker-title').textContent = `Log ${type}`;
       document.getElementById('history-title').textContent = type;
       
-      document.querySelectorAll('.tracker-tab').forEach(el => {
-        el.classList.remove('bg-slate-100', 'text-brand-700');
-        el.classList.add('text-slate-600', 'hover:bg-slate-50');
-      });
+      document.querySelectorAll('.tracker-tab').forEach(el => { el.classList.remove('bg-slate-100', 'text-brand-700'); el.classList.add('text-slate-600', 'hover:bg-slate-50'); });
       const activeTab = document.getElementById(`tab-${type}`);
       activeTab.classList.remove('text-slate-600', 'hover:bg-slate-50');
       activeTab.classList.add('bg-slate-100', 'text-brand-700');
@@ -497,24 +507,19 @@
     }
 
     window.editEntry = function(cat, ts) {
-        switchTab('tracking');
-        setTracker(cat);
+        switchTab('tracking'); setTracker(cat);
         const entry = state.data[cat].find(e => e.Timestamp === ts);
         if (!entry) return;
         
         document.getElementById('input-timestamp').value = entry.Timestamp.slice(0, 16);
         document.getElementById('input-notes').value = entry.Notes || '';
-        
         const det = parseComplexJSON(entry.Details);
         
         if (cat === 'workouts') {
             document.getElementById('f-workout-type').value = det.type || 'Strength';
             document.getElementById('f-duration').value = det.duration || '';
             document.querySelectorAll('.muscle-cb').forEach(cb => cb.checked = false);
-            (det.muscles || []).forEach(m => {
-                const cb = document.querySelector(`.muscle-cb[value="${m}"]`);
-                if (cb) cb.checked = true;
-            });
+            (det.muscles || []).forEach(m => { const cb = document.querySelector(`.muscle-cb[value="${m}"]`); if (cb) cb.checked = true; });
         } else if (cat === 'meals') {
             document.getElementById('f-meal-name').value = det.meal || '';
             document.getElementById('f-calories').value = det.calories || '';
@@ -524,43 +529,28 @@
             if (det.items && Array.isArray(det.items)) {
                 det.items.forEach(i => {
                     const cb = document.querySelector(`.supp-cb[value="${i.name}"]`);
-                    if (cb) {
-                        cb.checked = true;
-                        const sf = i.name.replace(/[^a-zA-Z0-9]/g, '-');
-                        const doseField = document.getElementById(`dose-${sf}`);
-                        if(doseField) { doseField.value = i.dose; doseField.disabled = false; }
-                    }
+                    if (cb) { cb.checked = true; const doseField = document.getElementById(`dose-${i.name.replace(/[^a-zA-Z0-9]/g, '-')}`); if(doseField) { doseField.value = i.dose; doseField.disabled = false; } }
                 });
             } else if (det.name) {
                  const cb = document.querySelector(`.supp-cb[value="${det.name}"]`);
-                 if (cb) {
-                     cb.checked = true;
-                     const sf = det.name.replace(/[^a-zA-Z0-9]/g, '-');
-                     const df = document.getElementById(`dose-${sf}`);
-                     if(df) { df.value = det.dose || ''; df.disabled = false; }
-                 }
+                 if (cb) { cb.checked = true; const df = document.getElementById(`dose-${det.name.replace(/[^a-zA-Z0-9]/g, '-')}`); if(df) { df.value = det.dose || ''; df.disabled = false; } }
             }
         } else if (cat === 'invisalign') {
             document.getElementById('f-invisalign-action').value = det.action || 'Trays Out';
         }
         
         state.editingEntry = { cat, ts };
-        
         const btn = document.getElementById('submit-btn');
         btn.innerHTML = '<i class="fa-solid fa-pen mr-2"></i> Update Entry';
-        btn.classList.remove('bg-brand-600', 'hover:bg-brand-700');
-        btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+        btn.classList.remove('bg-brand-600', 'hover:bg-brand-700'); btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
         
         if (!document.getElementById('cancel-edit-btn')) {
-            const cancelBtn = document.createElement('button');
-            cancelBtn.id = 'cancel-edit-btn';
-            cancelBtn.type = 'button';
+            const cancelBtn = document.createElement('button'); cancelBtn.id = 'cancel-edit-btn'; cancelBtn.type = 'button';
             cancelBtn.className = 'w-full mt-3 flex justify-center items-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all cursor-pointer relative z-20';
             cancelBtn.innerHTML = '<i class="fa-solid fa-xmark mr-2"></i> Cancel Edit';
             cancelBtn.onclick = cancelEdit;
             document.getElementById('form-action-buttons').appendChild(cancelBtn);
         }
-
         window.scrollTo({ top: document.getElementById('tracker-title').offsetTop - 100, behavior: 'smooth' });
     };
 
@@ -570,112 +560,55 @@
         document.getElementById('input-timestamp').value = getNowISO();
         
         const btn = document.getElementById('submit-btn');
-        btn.disabled = false; 
-        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save Entry';
-        btn.classList.add('bg-brand-600', 'hover:bg-brand-700');
-        btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-        
-        const cancelBtn = document.getElementById('cancel-edit-btn');
-        if (cancelBtn) cancelBtn.remove();
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save Entry';
+        btn.classList.add('bg-brand-600', 'hover:bg-brand-700'); btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+        const cancelBtn = document.getElementById('cancel-edit-btn'); if (cancelBtn) cancelBtn.remove();
         
         document.querySelectorAll('.muscle-cb').forEach(cb => cb.checked = false);
-        document.querySelectorAll('.supp-cb').forEach(cb => { 
-            cb.checked = false; 
-            const sf = cb.value.replace(/[^a-zA-Z0-9]/g, '-'); 
-            const df = document.getElementById(`dose-${sf}`); 
-            if(df) df.disabled = true; 
-        });
+        document.querySelectorAll('.supp-cb').forEach(cb => { cb.checked = false; const df = document.getElementById(`dose-${cb.value.replace(/[^a-zA-Z0-9]/g, '-')}`); if(df) df.disabled = true; });
     };
 
     window.promptDelete = function(cat, ts) {
-        showConfirm(
-            'Delete Entry',
-            `Are you sure you want to delete this log? This cannot be undone.`,
-            'Delete',
-            'bg-red-600 hover:bg-red-700',
-            async () => {
-                closeConfirm();
-                setSyncStatus('syncing');
-                try {
-                    await fetch(WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: JSON.stringify({ action: 'delete', category: cat, originalTimestamp: ts })
-                    });
-                    
-                    const targetTime = new Date(ts).getTime();
-                    state.data[cat] = state.data[cat].filter(e => new Date(e.Timestamp).getTime() !== targetTime);
-                    
-                    showToast('Entry deleted successfully');
-                    updateDashboard();
-                    if(!document.getElementById('view-tracking').classList.contains('hidden')) renderHistoryTable();
-                    setSyncStatus('success');
-                } catch(e) {
-                    showToast('Failed to delete entry', 'error');
-                    setSyncStatus('error');
-                }
-            }
-        );
+        showConfirm('Delete Entry', `Are you sure you want to delete this log? This cannot be undone.`, 'Delete', 'bg-red-600 hover:bg-red-700', async () => {
+            closeConfirm(); setSyncStatus('syncing');
+            try {
+                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete', category: cat, originalTimestamp: ts }) });
+                const targetTime = new Date(ts).getTime();
+                state.data[cat] = state.data[cat].filter(e => new Date(e.Timestamp).getTime() !== targetTime);
+                showToast('Entry deleted successfully'); updateDashboard();
+                if(!document.getElementById('view-tracking').classList.contains('hidden')) renderHistoryTable();
+                setSyncStatus('success');
+            } catch(e) { showToast('Failed to delete entry', 'error'); setSyncStatus('error'); }
+        });
     };
 
     window.promptDeduplicate = function() {
-        showConfirm(
-             'Clean Duplicates', 
-             'This will scan all tracking logs and permanently remove exact duplicates. Proceed?', 
-             'Clean Now',
-             'bg-brand-600 hover:bg-brand-700',
-             async () => {
-                 closeConfirm();
-                 setSyncStatus('syncing');
-                 let dupesFound = 0;
-                 
-                 for (const cat of ['workouts', 'meals', 'supplements', 'invisalign']) {
-                     const seen = new Set();
-                     const toDelete = [];
-                     const uniqueData = [];
-                     
-                     for (const entry of state.data[cat]) {
-                         const stringDetails = typeof entry.Details === 'string' ? entry.Details : JSON.stringify(entry.Details);
-                         const hash = entry.Timestamp + '|' + stringDetails;
-                         if (seen.has(hash)) {
-                             toDelete.push(entry);
-                             dupesFound++;
-                         } else {
-                             seen.add(hash);
-                             uniqueData.push(entry);
-                         }
-                     }
-                     
-                     state.data[cat] = uniqueData;
-                     
-                     for (const d of toDelete) {
-                          fetch(WEB_APP_URL, {
-                             method: 'POST', mode: 'no-cors',
-                             headers: { 'Content-Type': 'text/plain' },
-                             body: JSON.stringify({ action: 'delete', category: cat, originalTimestamp: d.Timestamp })
-                          }).catch(e => console.error(e));
-                     }
-                 }
-                 
-                 if (dupesFound > 0) {
-                     showToast(`Cleaned up ${dupesFound} duplicate entries.`);
-                     updateDashboard();
-                     if(!document.getElementById('view-tracking').classList.contains('hidden')) renderHistoryTable();
-                 } else {
-                     showToast('Everything is clean! No duplicates found.', 'info');
-                 }
-                 setSyncStatus('success');
-             }
-        );
+        showConfirm('Clean Duplicates', 'This will scan all tracking logs and permanently remove exact duplicates. Proceed?', 'Clean Now', 'bg-brand-600 hover:bg-brand-700', async () => {
+            closeConfirm(); setSyncStatus('syncing');
+            let dupesFound = 0;
+            for (const cat of ['workouts', 'meals', 'supplements', 'invisalign']) {
+                const seen = new Set(); const toDelete = []; const uniqueData = [];
+                for (const entry of state.data[cat]) {
+                    const stringDetails = typeof entry.Details === 'string' ? entry.Details : JSON.stringify(entry.Details);
+                    const hash = entry.Timestamp + '|' + stringDetails;
+                    if (seen.has(hash)) { toDelete.push(entry); dupesFound++; } else { seen.add(hash); uniqueData.push(entry); }
+                }
+                state.data[cat] = uniqueData;
+                for (const d of toDelete) {
+                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete', category: cat, originalTimestamp: d.Timestamp }) }).catch(e => console.error(e));
+                }
+            }
+            if (dupesFound > 0) { showToast(`Cleaned up ${dupesFound} duplicate entries.`); updateDashboard(); if(!document.getElementById('view-tracking').classList.contains('hidden')) renderHistoryTable(); } 
+            else { showToast('Everything is clean! No duplicates found.', 'info'); }
+            setSyncStatus('success');
+        });
     };
 
-    // --- MANUAL COLOR OVERRIDES & CONFIG ---
     window.handleMuscleClick = function(muscle) {
         state.currentEditingMuscle = muscle;
         const picker = document.getElementById('muscle-override-picker');
         let currentColorHex = state.manualMuscleColors[muscle] || state.heatmapColors.grey; 
-        picker.value = currentColorHex;
-        picker.click(); 
+        picker.value = currentColorHex; picker.click(); 
     };
 
     window.applyMuscleOverride = function(hexColor) {
@@ -687,26 +620,18 @@
     };
 
     window.clearMuscleOverrides = function() {
-        state.manualMuscleColors = {};
-        localStorage.removeItem('manualMuscleColors');
-        showToast('All custom muscle colors cleared.', 'info');
-        updateHeatmap();
+        state.manualMuscleColors = {}; localStorage.removeItem('manualMuscleColors');
+        showToast('All custom muscle colors cleared.', 'info'); updateHeatmap();
     };
 
     window.addNewMuscle = function() {
-      const input = document.getElementById('new-muscle-input');
-      const val = input.value.trim();
-      if (!val) return;
+      const input = document.getElementById('new-muscle-input'); const val = input.value.trim(); if (!val) return;
       const checked = Array.from(document.querySelectorAll('.muscle-cb:checked')).map(cb => cb.value);
       if (!state.muscleList.includes(val)) {
         state.muscleList.push(val);
-        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ category: 'workout_list', timestamp: val, Details: JSON.stringify({ target: val }) })
-        }).catch(e => console.error(e));
-        showToast(`Added ${val} to muscles!`);
-        renderDynamicFields('workouts'); 
-        checked.push(val);
-        checked.forEach(m => { const cb = document.querySelector(`.muscle-cb[value="${m}"]`); if (cb) cb.checked = true; });
+        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ category: 'workout_list', timestamp: val, Details: JSON.stringify({ target: val }) }) }).catch(e => {});
+        showToast(`Added ${val} to muscles!`); renderDynamicFields('workouts'); 
+        checked.push(val); checked.forEach(m => { const cb = document.querySelector(`.muscle-cb[value="${m}"]`); if (cb) cb.checked = true; });
       } else showToast(`${val} is already in the list!`, 'info');
     };
 
@@ -716,55 +641,33 @@
       const category = document.getElementById('new-supp-category')?.value.trim() || '';
       const timing = document.getElementById('new-supp-timing')?.value.trim() || '';
       const purpose = document.getElementById('new-supp-purpose')?.value.trim() || '';
-      
       if (!name) return showToast('Supplement name is required!', 'error');
       
-      const checked = Array.from(document.querySelectorAll('.supp-cb:checked')).map(cb => {
-          const safeName = cb.value.replace(/[^a-zA-Z0-9]/g, '-');
-          return { name: cb.value, dose: document.getElementById(`dose-${safeName}`).value };
-      });
-      
+      const checked = Array.from(document.querySelectorAll('.supp-cb:checked')).map(cb => { return { name: cb.value, dose: document.getElementById(`dose-${cb.value.replace(/[^a-zA-Z0-9]/g, '-')}`).value }; });
       if (!(name in state.supplementsConfig)) {
         state.supplementsConfig[name] = dose;
-        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ category: 'supplements_list', timestamp: getNowISO(), Details: JSON.stringify({ Supplement: name, Dosage: dose, Category: category, Timing: timing, Purpose: purpose }) })
-        }).catch(e => console.error(e));
-        showToast(`Added ${name} to supplements!`);
-        renderDynamicFields('supplements'); 
-        
-        checked.forEach(c => {
-            const cb = document.querySelector(`.supp-cb[value="${c.name}"]`);
-            if (cb) { cb.checked = true; const doseField = document.getElementById(`dose-${c.name.replace(/[^a-zA-Z0-9]/g, '-')}`); if(doseField) { doseField.value = c.dose; doseField.disabled = false; } }
-        });
-        const newCb = document.querySelector(`.supp-cb[value="${name}"]`);
-        if (newCb) { newCb.checked = true; const doseField = document.getElementById(`dose-${name.replace(/[^a-zA-Z0-9]/g, '-')}`); if (doseField) doseField.disabled = false; }
-      } else showToast(`${name} is already in the list!`, 'info');
+        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ category: 'supplements_list', timestamp: getNowISO(), Details: JSON.stringify({ Supplement: name, Dosage: dose, Category: category, Timing: timing, Purpose: purpose }) }) }).catch(e => {});
+        showToast(`Added ${name} to supplements!`); renderDynamicFields('supplements'); 
+        checked.forEach(c => { const cb = document.querySelector(`.supp-cb[value="${c.name}"]`); if (cb) { cb.checked = true; const doseField = document.getElementById(`dose-${c.name.replace(/[^a-zA-Z0-9]/g, '-')}`); if(doseField) { doseField.value = c.dose; doseField.disabled = false; } } });
+        const newCb = document.querySelector(`.supp-cb[value="${name}"]`); if (newCb) { newCb.checked = true; const df = document.getElementById(`dose-${name.replace(/[^a-zA-Z0-9]/g, '-')}`); if (df) df.disabled = false; }
+      } else showToast(`${name} is already in the list! Update its default dose instead.`, 'info');
     };
 
     window.saveSupplementDefault = function(name, safeName) {
-      const dose = document.getElementById(`dose-${safeName}`).value;
-      state.supplementsConfig[name] = dose;
-      fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ category: 'supplements_list', timestamp: getNowISO(), Details: JSON.stringify({ Supplement: name, Dosage: dose }) })
-      }).catch(e => console.error(e));
+      const dose = document.getElementById(`dose-${safeName}`).value; state.supplementsConfig[name] = dose;
+      fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ category: 'supplements_list', timestamp: getNowISO(), Details: JSON.stringify({ Supplement: name, Dosage: dose }) }) }).catch(e => {});
       showToast(`Saved default dose for ${name}!`);
     };
 
-    // --- FORMS & UI ---
     function renderDynamicFields(type) {
-      const container = document.getElementById('dynamic-fields');
-      let html = '';
-      
+      const container = document.getElementById('dynamic-fields'); let html = '';
       if (type === 'workouts') {
         html = `
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Type</label>
               <select id="f-workout-type" class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white cursor-pointer">
-                <option>Strength</option>
-                <option>Cardio</option>
-                <option>Flexibility/Yoga</option>
-                <option>Sports</option>
+                <option>Strength</option><option>Cardio</option><option>Flexibility/Yoga</option><option>Sports</option>
               </select>
             </div>
             <div>
@@ -790,19 +693,10 @@
         `;
       } else if (type === 'meals') {
         html = `
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Meal Name</label>
-            <input type="text" id="f-meal-name" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" placeholder="e.g. Chicken & Rice">
-          </div>
+          <div><label class="block text-sm font-medium text-slate-700 mb-1">Meal Name</label><input type="text" id="f-meal-name" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" placeholder="e.g. Chicken & Rice"></div>
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Calories (kcal)</label>
-              <input type="number" id="f-calories" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" placeholder="500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Protein (g)</label>
-              <input type="number" id="f-protein" class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" placeholder="40">
-            </div>
+            <div><label class="block text-sm font-medium text-slate-700 mb-1">Calories (kcal)</label><input type="number" id="f-calories" required class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" placeholder="500"></div>
+            <div><label class="block text-sm font-medium text-slate-700 mb-1">Protein (g)</label><input type="number" id="f-protein" class="w-full rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" placeholder="40"></div>
           </div>
         `;
       } else if (type === 'supplements') {
@@ -813,26 +707,19 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 ${Object.entries(state.supplementsConfig).map(([name, defaultDose]) => {
                   const safeName = name.replace(/[^a-zA-Z0-9]/g, '-');
-                  return `
-                  <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm hover:border-brand-300 transition-colors">
+                  return `<div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm hover:border-brand-300 transition-colors">
                     <label class="flex items-center gap-2 flex-1 cursor-pointer overflow-hidden">
                       <input type="checkbox" value="${name}" class="supp-cb w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer" onchange="document.getElementById('dose-${safeName}').disabled = !this.checked; if(this.checked) document.getElementById('dose-${safeName}').focus();">
                       <span class="text-sm font-medium text-slate-700 truncate" title="${name}">${name}</span>
                     </label>
                     <div class="flex items-center gap-1 w-24 sm:w-28 flex-shrink-0">
                         <input type="text" id="dose-${safeName}" class="w-full rounded border border-slate-300 py-1.5 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200" value="${defaultDose}" disabled placeholder="Dose">
-                        <button type="button" onclick="saveSupplementDefault('${name}', '${safeName}')" class="text-slate-400 hover:text-brand-600 transition-colors p-1.5 cursor-pointer" title="Save as default dose">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                        <button type="button" onclick="saveSupplementDefault('${name}', '${safeName}')" class="text-slate-400 hover:text-brand-600 transition-colors p-1.5 cursor-pointer" title="Save as default dose"><i class="fa-solid fa-floppy-disk"></i></button>
                     </div>
-                  </div>
-                `}).join('')}
+                  </div>`}).join('')}
               </div>
-              
               <div class="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
-                <label class="block text-xs font-semibold text-slate-600 mb-3 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-plus-circle text-brand-500"></i> Add Custom Supplement
-                </label>
+                <label class="block text-xs font-semibold text-slate-600 mb-3 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-plus-circle text-brand-500"></i> Add Custom Supplement</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <input type="text" id="new-supp-name" class="rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white shadow-sm" placeholder="Supplement Name* (Required)">
                   <input type="text" id="new-supp-dose" class="rounded-lg border border-slate-300 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white shadow-sm" placeholder="Dosage (e.g. 5g)">
@@ -858,184 +745,44 @@
           </div>
         `;
       }
-      
       container.innerHTML = html;
     }
 
-    async function handleFormSubmit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('submit-btn');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Saving...';
-
-      const type = state.activeTracker;
-      const timestamp = document.getElementById('input-timestamp').value;
-      const notes = document.getElementById('input-notes').value;
-      let details = {};
-
-      if (type === 'workouts') {
-        const muscles = Array.from(document.querySelectorAll('.muscle-cb:checked')).map(cb => cb.value);
-        details = { type: document.getElementById('f-workout-type').value, duration: document.getElementById('f-duration').value, muscles: muscles };
-      } else if (type === 'meals') {
-        details = { meal: document.getElementById('f-meal-name').value, calories: parseInt(document.getElementById('f-calories').value) || 0, protein: parseInt(document.getElementById('f-protein').value) || 0 };
-      } else if (type === 'supplements') {
-        const selectedItems = Array.from(document.querySelectorAll('.supp-cb:checked')).map(cb => {
-            const safeName = cb.value.replace(/[^a-zA-Z0-9]/g, '-');
-            return { name: cb.value, dose: document.getElementById(`dose-${safeName}`).value };
-        });
-        if (selectedItems.length === 0) {
-          showToast('Please select at least one supplement', 'error');
-          btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save Entry'; return;
-        }
-        details = { items: selectedItems };
-      } else if (type === 'invisalign') {
-        details = { action: document.getElementById('f-invisalign-action').value };
-      }
-
-      const isoTimestamp = new Date(timestamp).toISOString();
-      const payload = { Timestamp: isoTimestamp, Details: JSON.stringify(details), Notes: notes };
-      
-      const isEdit = !!state.editingEntry;
-      const originalTs = isEdit ? state.editingEntry.ts : null;
-
-      const postData = {
-        action: isEdit ? 'edit' : 'log',
-        category: type,
-        timestamp: isoTimestamp,
-        Timestamp: isoTimestamp, 
-        originalTimestamp: originalTs,
-        Details: JSON.stringify(details),
-        Notes: notes
-      };
-
-      try {
-        await fetch(WEB_APP_URL, {
-          method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(postData)
-        });
-        
-        if (isEdit) {
-            // Precise original timestamp filtering to support replacing the correct row locally
-            const targetTime = new Date(originalTs).getTime();
-            state.data[type] = state.data[type].map(e => new Date(e.Timestamp).getTime() === targetTime ? payload : e);
-            showToast(`Successfully updated ${type}!`);
-            cancelEdit();
-        } else {
-            state.data[type].unshift(payload);
-            showToast(`Successfully logged ${type}!`);
-            document.getElementById('tracking-form').reset();
-            document.getElementById('input-timestamp').value = getNowISO();
-            if (type === 'workouts') { document.querySelectorAll('.muscle-cb').forEach(cb => cb.checked = false); } 
-            else if (type === 'supplements') { document.querySelectorAll('.supp-cb').forEach(cb => { cb.checked = false; const sf = cb.value.replace(/[^a-zA-Z0-9]/g, '-'); const df = document.getElementById(`dose-${sf}`); if(df) df.disabled = true; }); }
-        }
-        
-        renderHistoryTable();
-        updateDashboard();
-      } catch (err) {
-        showToast('Failed to save entry', 'error'); console.error(err);
-      } finally {
-        if(!state.editingEntry) { 
-            btn.disabled = false; 
-            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save Entry'; 
-        }
-      }
+    function loadMockDataIfEmpty() {
+      if (state.muscleList.length === 0) state.muscleList = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Quadriceps', 'Hamstrings', 'Calves', 'Legs', 'Abs', 'Cardio'];
+      if (Object.keys(state.supplementsConfig).length === 0) { state.supplementsConfig = { 'Whey Protein': '1 scoop', 'Creatine': '5g', 'Fish Oil': '2 caps', 'Multivitamin': '1 tab' }; }
     }
 
-    function extractSupplementsConfig(rawData) {
-        const config = {};
-        if (!rawData || !rawData.length) return config;
-
-        let nameColIdx = -1; let doseColIdx = -1;
-        if (rawData[0]) {
-            const headers = rawData[0].map(h => String(h).toLowerCase().trim());
-            nameColIdx = Math.max(headers.indexOf('supplement'), headers.indexOf('name'), headers.indexOf('supplements'));
-            doseColIdx = Math.max(headers.indexOf('default dose'), headers.indexOf('dose'), headers.indexOf('dosage'), headers.indexOf('amount'));
-        }
-        const startIndex = (nameColIdx !== -1 || doseColIdx !== -1 || (rawData[0][0] && String(rawData[0][0]).toLowerCase().includes('timestamp'))) ? 1 : 0;
-
-        for(let i = startIndex; i < rawData.length; i++) {
-            if(!rawData[i]) continue;
-            let parsedFromJson = false;
-            const colB = rawData[i][1];
-
-            if (colB && typeof colB === 'string' && colB.trim().startsWith('{')) {
-                try {
-                    let parsedRow = JSON.parse(colB);
-                    let details = parsedRow.Details;
-                    if (details) {
-                        if (typeof details === 'string') details = parseComplexJSON(details);
-                        if (details.supplement || details.Supplement || details.name) {
-                            config[details.supplement || details.Supplement || details.name] = details.Dosage || details.dosage || details.defaultDose || details.dose || '';
-                            parsedFromJson = true;
-                        }
-                    } else if (parsedRow.supplement || parsedRow.Supplement || parsedRow.name) {
-                         config[parsedRow.supplement || parsedRow.Supplement || parsedRow.name] = parsedRow.Dosage || parsedRow.dosage || parsedRow.defaultDose || parsedRow.dose || '';
-                         parsedFromJson = true;
-                    }
-                } catch(e) {}
-            }
-
-            if (!parsedFromJson) {
-                if (nameColIdx !== -1 && rawData[i][nameColIdx]) {
-                    const name = String(rawData[i][nameColIdx]).trim();
-                    const dose = doseColIdx !== -1 ? String(rawData[i][doseColIdx] || '').trim() : '';
-                    if (name) config[name] = dose;
-                } else if (rawData[i][0] && !String(rawData[i][0]).includes('T')) {
-                    const val = String(rawData[i][0]).trim();
-                    if (val && val !== 'supplements_list') {
-                        const doseVal = rawData[i][1] ? String(rawData[i][1]).trim() : '';
-                        config[val] = doseVal;
-                    }
-                }
-            }
-        }
-        return config;
+    function fetchCategoryJSONP(category) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonpCallback_' + category + '_' + Math.round(100000 * Math.random());
+        window[callbackName] = function(data) { delete window[callbackName]; document.body.removeChild(script); resolve(data); };
+        const script = document.createElement('script'); script.src = WEB_APP_URL + '?category=' + category + '&callback=' + callbackName;
+        script.onerror = () => { delete window[callbackName]; document.body.removeChild(script); reject(new Error('JSONP failed')); };
+        document.body.appendChild(script);
+      });
     }
 
     function processSheetData(rawData) {
       if (!rawData || !Array.isArray(rawData) || rawData.length === 0) return [];
-      const parsedData = [];
-      let startIndex = 0;
-      
-      if (rawData[0] && rawData[0][0]) {
-        const firstCell = String(rawData[0][0]).toLowerCase().trim();
-        if (firstCell === 'timestamp' || firstCell === 'date' || firstCell === 'time') startIndex = 1; 
-      }
-      
+      const parsedData = []; let startIndex = 0;
+      if (rawData[0] && rawData[0][0]) { const firstCell = String(rawData[0][0]).toLowerCase().trim(); if (firstCell === 'timestamp' || firstCell === 'date' || firstCell === 'time') startIndex = 1; }
+
       for (let i = startIndex; i < rawData.length; i++) {
-        const row = rawData[i];
-        if (!row || !row[0]) continue;
-        
-        const timestamp = row[0]; 
-        let details = "{}"; 
-        let notes = "";
+        const row = rawData[i]; if (!row || !row[0]) continue;
+        const timestamp = row[0]; let details = "{}"; let notes = "";
         
         try {
           let parsedB = row[1];
-          if (typeof parsedB === 'string' && parsedB.trim().startsWith('{')) { 
-              try { parsedB = JSON.parse(parsedB); } catch(e) {} 
-          }
+          if (typeof parsedB === 'string' && parsedB.trim().startsWith('{')) { try { parsedB = JSON.parse(parsedB); } catch(e) {} }
           if (typeof parsedB === 'object' && parsedB !== null) { 
-              if (parsedB.Details !== undefined) {
-                  details = typeof parsedB.Details === 'string' ? parsedB.Details : JSON.stringify(parsedB.Details);
-                  notes = parsedB.Notes !== undefined ? parsedB.Notes : (parsedB.note || "");
-              } else {
-                  details = JSON.stringify(parsedB);
-                  notes = parsedB.Notes !== undefined ? parsedB.Notes : (parsedB.note || "");
-              }
-          } else { 
-              details = String(row[1] || ""); 
-          }
-        } catch (e) { 
-            details = String(row[1] || ""); 
-        } 
+              if (parsedB.Details !== undefined) { details = typeof parsedB.Details === 'string' ? parsedB.Details : JSON.stringify(parsedB.Details); notes = parsedB.Notes !== undefined ? parsedB.Notes : (parsedB.note || ""); } 
+              else { details = JSON.stringify(parsedB); notes = parsedB.Notes !== undefined ? parsedB.Notes : (parsedB.note || ""); }
+          } else { details = String(row[1] || ""); }
+        } catch (e) { details = String(row[1] || ""); } 
         
-        if (row.length >= 3 && row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "") { 
-            notes = String(row[2]); 
-        }
-        
-        let isoTime = timestamp; 
-        try { isoTime = new Date(timestamp).toISOString(); } catch(e) {}
-        
+        if (row.length >= 3 && row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "") { notes = String(row[2]); }
+        let isoTime = timestamp; try { isoTime = new Date(timestamp).toISOString(); } catch(e) {}
         parsedData.push({ Timestamp: isoTime, Details: details, Notes: notes });
       }
       return parsedData;
@@ -1056,14 +803,42 @@
       return Array.from(list);
     }
 
-    function fetchCategoryJSONP(category) {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'jsonpCallback_' + category + '_' + Math.round(100000 * Math.random());
-        window[callbackName] = function(data) { delete window[callbackName]; document.body.removeChild(script); resolve(data); };
-        const script = document.createElement('script'); script.src = WEB_APP_URL + '?category=' + category + '&callback=' + callbackName;
-        script.onerror = () => { delete window[callbackName]; document.body.removeChild(script); reject(new Error('JSONP failed')); };
-        document.body.appendChild(script);
-      });
+    function extractSupplementsConfig(rawData) {
+        const config = {}; if (!rawData || !rawData.length) return config;
+        let nameColIdx = -1; let doseColIdx = -1;
+        if (rawData[0]) {
+            const headers = rawData[0].map(h => String(h).toLowerCase().trim());
+            nameColIdx = Math.max(headers.indexOf('supplement'), headers.indexOf('name'), headers.indexOf('supplements'));
+            doseColIdx = Math.max(headers.indexOf('default dose'), headers.indexOf('dose'), headers.indexOf('dosage'), headers.indexOf('amount'));
+        }
+        const startIndex = (nameColIdx !== -1 || doseColIdx !== -1 || (rawData[0][0] && String(rawData[0][0]).toLowerCase().includes('timestamp'))) ? 1 : 0;
+
+        for(let i = startIndex; i < rawData.length; i++) {
+            if(!rawData[i]) continue;
+            let parsedFromJson = false; const colB = rawData[i][1];
+
+            if (colB && typeof colB === 'string' && colB.trim().startsWith('{')) {
+                try {
+                    let parsedRow = JSON.parse(colB); let details = parsedRow.Details;
+                    if (details) {
+                        if (typeof details === 'string') details = parseComplexJSON(details);
+                        if (details.supplement || details.Supplement || details.name) { config[details.supplement || details.Supplement || details.name] = details.Dosage || details.dosage || details.defaultDose || details.dose || ''; parsedFromJson = true; }
+                    } else if (parsedRow.supplement || parsedRow.Supplement || parsedRow.name) {
+                         config[parsedRow.supplement || parsedRow.Supplement || parsedRow.name] = parsedRow.Dosage || parsedRow.dosage || parsedRow.defaultDose || parsedRow.dose || ''; parsedFromJson = true;
+                    }
+                } catch(e) {}
+            }
+            if (!parsedFromJson) {
+                if (nameColIdx !== -1 && rawData[i][nameColIdx]) {
+                    const name = String(rawData[i][nameColIdx]).trim(); const dose = doseColIdx !== -1 ? String(rawData[i][doseColIdx] || '').trim() : '';
+                    if (name) config[name] = dose;
+                } else if (rawData[i][0] && !String(rawData[i][0]).includes('T')) {
+                    const val = String(rawData[i][0]).trim();
+                    if (val && val !== 'supplements_list') { const doseVal = rawData[i][1] ? String(rawData[i][1]).trim() : ''; config[val] = doseVal; }
+                }
+            }
+        }
+        return config;
     }
 
     async function fetchData() {
@@ -1075,43 +850,74 @@
         categories.slice(0, 4).forEach((cat, index) => {
           if (results[index]) { state.data[cat] = processSheetData(results[index]); if (state.data[cat].length > 0) hasAnyData = true; }
         });
-        if (results[4] && results[4].length > 0) {
-           const parsedConfig = extractSupplementsConfig(results[4]);
-           if (Object.keys(parsedConfig).length > 0) state.supplementsConfig = { ...state.supplementsConfig, ...parsedConfig };
-        }
-        if (results[5] && results[5].length > 0) state.muscleList = extractColumnList(results[5], ['target', 'body part', 'muscle']);
-        
-        // Removed loadMockDataIfEmpty to prevent fake data from overriding true empty states
 
+        if (results[4] && results[4].length > 0) { const parsedConfig = extractSupplementsConfig(results[4]); if (Object.keys(parsedConfig).length > 0) state.supplementsConfig = { ...state.supplementsConfig, ...parsedConfig }; }
+        if (results[5] && results[5].length > 0) { state.muscleList = extractColumnList(results[5], ['target', 'body part', 'muscle']); }
+
+        if (!hasAnyData) loadMockDataIfEmpty();
         updateDashboard();
         if(!document.getElementById('view-tracking').classList.contains('hidden')) { renderDynamicFields(state.activeTracker); renderHistoryTable(); }
         setSyncStatus('success');
-      } catch (err) {
-        setSyncStatus('error'); showToast('Error syncing data.', 'error');
+      } catch (err) { setSyncStatus('error'); showToast('Error syncing data.', 'error'); loadMockDataIfEmpty(); updateDashboard(); }
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Saving...';
+
+      const type = state.activeTracker;
+      const timestamp = document.getElementById('input-timestamp').value;
+      const notes = document.getElementById('input-notes').value;
+      let details = {};
+
+      if (type === 'workouts') {
+        const muscles = Array.from(document.querySelectorAll('.muscle-cb:checked')).map(cb => cb.value);
+        details = { type: document.getElementById('f-workout-type').value, duration: document.getElementById('f-duration').value, muscles: muscles };
+      } else if (type === 'meals') {
+        details = { meal: document.getElementById('f-meal-name').value, calories: parseInt(document.getElementById('f-calories').value) || 0, protein: parseInt(document.getElementById('f-protein').value) || 0 };
+      } else if (type === 'supplements') {
+        const selectedItems = Array.from(document.querySelectorAll('.supp-cb:checked')).map(cb => { return { name: cb.value, dose: document.getElementById(`dose-${cb.value.replace(/[^a-zA-Z0-9]/g, '-')}`).value }; });
+        if (selectedItems.length === 0) { showToast('Please select at least one supplement', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save Entry'; return; }
+        details = { items: selectedItems };
+      } else if (type === 'invisalign') {
+        details = { action: document.getElementById('f-invisalign-action').value };
       }
+
+      const isoTimestamp = new Date(timestamp).toISOString();
+      const payload = { Timestamp: isoTimestamp, Details: JSON.stringify(details), Notes: notes };
+      const isEdit = !!state.editingEntry;
+      const originalTs = isEdit ? state.editingEntry.ts : null;
+
+      const postData = { action: isEdit ? 'edit' : 'log', category: type, timestamp: isoTimestamp, Timestamp: isoTimestamp, originalTimestamp: originalTs, Details: JSON.stringify(details), Notes: notes };
+
+      try {
+        await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(postData) });
+        if (isEdit) {
+            const targetTime = new Date(originalTs).getTime();
+            state.data[type] = state.data[type].map(e => new Date(e.Timestamp).getTime() === targetTime ? payload : e);
+            showToast(`Successfully updated ${type}!`); cancelEdit();
+        } else {
+            state.data[type].unshift(payload); showToast(`Successfully logged ${type}!`);
+            document.getElementById('tracking-form').reset(); document.getElementById('input-timestamp').value = getNowISO();
+            if (type === 'workouts') { document.querySelectorAll('.muscle-cb').forEach(cb => cb.checked = false); } 
+            else if (type === 'supplements') { document.querySelectorAll('.supp-cb').forEach(cb => { cb.checked = false; const df = document.getElementById(`dose-${cb.value.replace(/[^a-zA-Z0-9]/g, '-')}`); if(df) df.disabled = true; }); }
+        }
+        renderHistoryTable(); updateDashboard();
+      } catch (err) { showToast('Failed to save entry', 'error'); } 
+      finally { if(!state.editingEntry) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save Entry'; } }
     }
 
     function quickLogInvisalign(action) {
-      const isoTimestamp = new Date().toISOString();
-      const details = { action: action };
+      const isoTimestamp = new Date().toISOString(); const details = { action: action };
       const payload = { Timestamp: isoTimestamp, Details: JSON.stringify(details), Notes: "Quick Log" };
-      fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ category: 'invisalign', timestamp: isoTimestamp, Timestamp: isoTimestamp, Details: JSON.stringify(details), Notes: "Quick Log" })
-      }).catch(err => console.error(err));
-      state.data.invisalign.unshift(payload);
-      showToast(`${action} logged!`);
-      updateDashboard();
-      if(state.activeTracker === 'invisalign') renderHistoryTable();
+      fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ category: 'invisalign', timestamp: isoTimestamp, Timestamp: isoTimestamp, Details: JSON.stringify(details), Notes: "Quick Log" }) }).catch(err => {});
+      state.data.invisalign.unshift(payload); showToast(`${action} logged!`); updateDashboard(); if(state.activeTracker === 'invisalign') renderHistoryTable();
     }
 
     function manualRefresh() { fetchData(); }
 
-    function updateDashboard() {
-      updateInvisalign();
-      updateHeatmap();
-      renderCharts();
-      renderGlobalFeed();
-    }
+    function updateDashboard() { updateInvisalign(); updateHeatmap(); renderCharts(); renderGlobalFeed(); }
 
     function updateInvisalign() {
       const logs = state.data.invisalign.map(log => ({ time: new Date(log.Timestamp), action: parseComplexJSON(log.Details).action })).sort((a, b) => b.time - a.time);
@@ -1131,6 +937,7 @@
       document.getElementById('invisalign-time-display').textContent = `${hours}h ${mins}m`;
       const stateEl = document.getElementById('invisalign-current-state');
       const statusEl = document.getElementById('invisalign-status');
+      const progressEl = document.getElementById('invisalign-progress');
       
       if (isOut) {
         stateEl.textContent = "Trays OUT"; stateEl.className = "font-bold text-rose-600";
@@ -1140,71 +947,58 @@
         statusEl.textContent = "Time Out Total"; statusEl.className = "text-xs text-slate-500 font-medium uppercase tracking-wider mt-1";
       }
 
-      const budgetMins = 120; // Corrected to 2 Hours (120 mins)
+      const budgetMins = 120; // Corrected Daily Budget: 2 Hours
       let percentage = (totalMinsOut / budgetMins) * 100; if (percentage > 100) percentage = 100;
-      const progressEl = document.getElementById('invisalign-progress');
       progressEl.setAttribute('stroke-dasharray', `${percentage}, 100`);
       const timeEl = document.getElementById('invisalign-time-display');
       
-      if (percentage > 90) {
-        progressEl.classList.replace('stroke-brand-500', 'stroke-red-500'); timeEl.classList.replace('text-brand-500', 'text-red-500');
-      } else if (percentage > 75) {
-         progressEl.classList.replace('stroke-brand-500', 'stroke-orange-500'); progressEl.classList.replace('stroke-red-500', 'stroke-orange-500');
-         timeEl.classList.replace('text-brand-500', 'text-orange-500'); timeEl.classList.replace('text-red-500', 'text-orange-500');
-      } else {
-         progressEl.classList.remove('stroke-red-500', 'stroke-orange-500'); progressEl.classList.add('stroke-brand-500');
-         timeEl.classList.remove('text-red-500', 'text-orange-500'); timeEl.classList.add('text-brand-500');
-      }
+      if (percentage > 90) { progressEl.classList.replace('stroke-brand-500', 'stroke-red-500'); timeEl.classList.replace('text-brand-500', 'text-red-500'); } 
+      else if (percentage > 75) { progressEl.classList.replace('stroke-brand-500', 'stroke-orange-500'); progressEl.classList.replace('stroke-red-500', 'stroke-orange-500'); timeEl.classList.replace('text-brand-500', 'text-orange-500'); timeEl.classList.replace('text-red-500', 'text-orange-500'); } 
+      else { progressEl.classList.remove('stroke-red-500', 'stroke-orange-500'); progressEl.classList.add('stroke-brand-500'); timeEl.classList.remove('text-red-500', 'text-orange-500'); timeEl.classList.add('text-brand-500'); }
 
-      if (isOut && !state.invisalignInterval) { state.invisalignInterval = setInterval(updateInvisalign, 60000); } 
-      else if (!isOut && state.invisalignInterval) { clearInterval(state.invisalignInterval); state.invisalignInterval = null; }
+      if (isOut && !state.invisalignInterval) { state.invisalignInterval = setInterval(updateInvisalign, 60000); } else if (!isOut && state.invisalignInterval) { clearInterval(state.invisalignInterval); state.invisalignInterval = null; }
     }
 
     function updateHeatmapColor(key, value) {
-      state.heatmapColors[key] = value;
-      localStorage.setItem('heatmapColors', JSON.stringify(state.heatmapColors));
-      updateHeatmap();
+      state.heatmapColors[key] = value; localStorage.setItem('heatmapColors', JSON.stringify(state.heatmapColors)); updateHeatmap();
     }
 
     function updateHeatmap() {
       let lastWorkoutDates = {};
-      Object.keys(svgMap).forEach(m => lastWorkoutDates[m] = null);
+      Object.keys(svgMap).forEach(m => lastWorkoutDates[m] = null); 
 
       state.data.workouts.forEach(w => {
         const wDate = new Date(w.Timestamp);
         if(isNaN(wDate.getTime())) return;
         const details = parseComplexJSON(w.Details);
-        
         let musclesWorked = [];
         if (details && details.muscles && Array.isArray(details.muscles)) musclesWorked = details.muscles;
-        else if (details && details['muscle group']) musclesWorked = [details['muscle group']];
+        else if (details && details['muscle group']) musclesWorked = [details['muscle group']]; 
 
         musclesWorked.forEach(m => { 
-          const standardMuscleKey = Object.keys(svgMap).find(k => k.toLowerCase() === m.toLowerCase()) || m;
-          if (!lastWorkoutDates[standardMuscleKey] || wDate > lastWorkoutDates[standardMuscleKey]) {
-              lastWorkoutDates[standardMuscleKey] = wDate;
-          }
+          const expandedMuscles = getConstituentMuscles(m); // Handle generic 'Legs' inputs automatically
+          expandedMuscles.forEach(exM => {
+              const standardMuscleKey = Object.keys(svgMap).find(k => k.toLowerCase() === exM.toLowerCase()) || exM;
+              if (!lastWorkoutDates[standardMuscleKey] || wDate > lastWorkoutDates[standardMuscleKey]) { lastWorkoutDates[standardMuscleKey] = wDate; }
+          });
         });
       });
 
       const now = new Date();
       Object.keys(state.heatmapColors).forEach(key => { const el = document.getElementById(`color-${key}`); if(el) el.value = state.heatmapColors[key]; });
-      
       const overridesExist = Object.keys(state.manualMuscleColors).length > 0;
       document.getElementById('clear-overrides-container').classList.toggle('hidden', !overridesExist);
 
       Object.keys(svgMap).forEach(muscle => {
-        let color = state.heatmapColors.grey;
-        let strokeColor = '#94a3b8';
-        
-        const dateObj = lastWorkoutDates[muscle];
-        const dateStr = dateObj ? dateObj.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Never logged';
+        let color = state.heatmapColors.grey; let strokeColor = '#94a3b8'; let hoverText = 'Never logged';
 
         if (state.manualMuscleColors[muscle]) {
             color = state.manualMuscleColors[muscle]; strokeColor = '#334155';
-        } else if (dateObj) {
-          const hoursAgo = (now - dateObj) / (1000 * 60 * 60);
-          const isSameDay = now.toDateString() === dateObj.toDateString();
+            if(lastWorkoutDates[muscle]) hoverText = `Last: ` + lastWorkoutDates[muscle].toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+        } else if (lastWorkoutDates[muscle]) {
+          hoverText = `Last: ` + lastWorkoutDates[muscle].toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+          const hoursAgo = (now - lastWorkoutDates[muscle]) / (1000 * 60 * 60);
+          const isSameDay = now.toDateString() === lastWorkoutDates[muscle].toDateString();
           strokeColor = '#334155'; 
 
           if (isSameDay || hoursAgo <= 12) color = state.heatmapColors.red;
@@ -1217,11 +1011,7 @@
         if (svgMap[muscle]) {
           svgMap[muscle].forEach(id => {
             const el = document.getElementById(id);
-            if(el) { 
-              el.style.fill = color; 
-              el.style.stroke = strokeColor; 
-              el.setAttribute('data-tooltip', `${muscle}\nLast: ${dateStr}`);
-            }
+            if(el) { el.style.fill = color; el.style.stroke = strokeColor; el.setAttribute('data-tooltip', `${muscle}\n${hoverText}`); }
           });
         }
       });
@@ -1241,9 +1031,7 @@
         state.data.meals.forEach(m => { 
           const mDate = new Date(m.Timestamp);
           if (mDate >= startOfDay && mDate <= endOfDay) { 
-            const det = parseComplexJSON(m.Details); 
-            dailyCals += parseInt(det.calories || 0); 
-            dailyPro += parseInt(det.protein || 0); 
+            const det = parseComplexJSON(m.Details); dailyCals += parseInt(det.calories || 0); dailyPro += parseInt(det.protein || 0); 
           } 
         });
         calData.push(dailyCals); proData.push(dailyPro);
@@ -1252,8 +1040,7 @@
         state.data.workouts.forEach(w => { 
           const wDate = new Date(w.Timestamp);
           if (wDate >= startOfDay && wDate <= endOfDay) { 
-            const det = parseComplexJSON(w.Details); 
-            dailyMins += parseInt(det.duration || 0); 
+            const det = parseComplexJSON(w.Details); dailyMins += parseInt(det.duration || 0); 
           } 
         });
         workoutData.push(dailyMins);
@@ -1279,25 +1066,18 @@
     }
 
     function renderGlobalFeed() {
-      const list = document.getElementById('global-feed-list');
-      let allEvents = [];
+      const list = document.getElementById('global-feed-list'); let allEvents = [];
       Object.keys(state.data).forEach(cat => { state.data[cat].forEach(item => { allEvents.push({ cat, ...item, parsedDetails: parseComplexJSON(item.Details) }); }); });
       allEvents.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
       const feedEvents = allEvents.slice(0, 10);
 
-      const catConfig = {
-        workouts: { icon: 'fa-dumbbell', color: 'text-purple-500', bg: 'bg-purple-50' }, meals: { icon: 'fa-utensils', color: 'text-green-500', bg: 'bg-green-50' },
-        supplements: { icon: 'fa-pills', color: 'text-amber-500', bg: 'bg-amber-50' }, invisalign: { icon: 'fa-teeth', color: 'text-blue-500', bg: 'bg-blue-50' }
-      };
+      const catConfig = { workouts: { icon: 'fa-dumbbell', color: 'text-purple-500', bg: 'bg-purple-50' }, meals: { icon: 'fa-utensils', color: 'text-green-500', bg: 'bg-green-50' }, supplements: { icon: 'fa-pills', color: 'text-amber-500', bg: 'bg-amber-50' }, invisalign: { icon: 'fa-teeth', color: 'text-blue-500', bg: 'bg-blue-50' } };
 
       list.innerHTML = feedEvents.length === 0 
         ? `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">No activity logged yet.</td></tr>`
         : feedEvents.map(ev => {
-          const conf = catConfig[ev.cat];
-          const date = new Date(ev.Timestamp);
-          const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          const dateStr = date.toLocaleDateString([], {month: 'short', day: 'numeric'});
-          
+          const conf = catConfig[ev.cat]; const date = new Date(ev.Timestamp);
+          const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); const dateStr = date.toLocaleDateString([], {month: 'short', day: 'numeric'});
           let detailsText = '';
           if (ev.cat === 'workouts') { detailsText = `${ev.parsedDetails.type || ev.parsedDetails.workout || 'Workout'} ${ev.parsedDetails.duration ? '- '+ev.parsedDetails.duration+'m' : ''}`; } 
           else if (ev.cat === 'meals') { detailsText = `${ev.parsedDetails.meal || ev.parsedDetails.food || 'Meal'} (${ev.parsedDetails.calories || 0} kcal)`; } 
@@ -1306,8 +1086,7 @@
             else { detailsText = `${ev.parsedDetails.name || ev.parsedDetails.supplement} - ${ev.parsedDetails.dose || ev.parsedDetails.dosage}`; }
           } else if (ev.cat === 'invisalign') { detailsText = ev.parsedDetails.action; }
 
-          return `
-            <tr class="hover:bg-slate-50 transition-colors">
+          return `<tr class="hover:bg-slate-50 transition-colors">
               <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium capitalize ${conf.bg} ${conf.color}"><i class="fa-solid ${conf.icon}"></i> ${ev.cat}</span></td>
               <td class="px-4 py-3 whitespace-nowrap text-slate-600">${dateStr}, ${timeStr}</td>
               <td class="px-4 py-3 font-medium text-slate-800">${detailsText}</td>
@@ -1316,17 +1095,13 @@
                   <button onclick="editEntry('${ev.cat}', '${ev.Timestamp}')" class="text-slate-400 hover:text-brand-600 p-1 transition-colors cursor-pointer" title="Edit"><i class="fa-solid fa-pen"></i></button>
                   <button onclick="promptDelete('${ev.cat}', '${ev.Timestamp}')" class="text-slate-400 hover:text-red-600 p-1 transition-colors ml-2 cursor-pointer" title="Delete"><i class="fa-solid fa-trash"></i></button>
               </td>
-            </tr>
-          `;
+            </tr>`;
         }).join('');
     }
 
     function renderHistoryTable() {
-      const thead = document.getElementById('history-table-head');
-      const tbody = document.getElementById('history-table-body');
-      const type = state.activeTracker;
-      const data = state.data[type] || [];
-
+      const thead = document.getElementById('history-table-head'); const tbody = document.getElementById('history-table-body');
+      const type = state.activeTracker; const data = state.data[type] || [];
       let headers = ['Timestamp', 'Details', 'Notes', 'Actions'];
       if (type === 'workouts') headers = ['Timestamp', 'Type & Duration', 'Muscles', 'Notes', 'Actions'];
       if (type === 'meals') headers = ['Timestamp', 'Meal', 'Macros', 'Notes', 'Actions'];
@@ -1334,20 +1109,15 @@
       if (type === 'invisalign') headers = ['Timestamp', 'Action', 'Notes', 'Actions'];
 
       thead.innerHTML = headers.map((h, i) => `<th scope="col" class="px-4 py-3 ${i===0?'rounded-tl-lg':''} ${i===headers.length-1?'rounded-tr-lg text-right':''}">${h}</th>`).join('');
-
       const sorted = [...data].sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp)).slice(0, 15);
 
       tbody.innerHTML = sorted.length === 0 
         ? `<tr><td colspan="${headers.length}" class="px-4 py-8 text-center text-slate-500">No entries found.</td></tr>`
         : sorted.map(row => {
-          const date = new Date(row.Timestamp).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-          const det = parseComplexJSON(row.Details);
-          let cols = [];
+          const date = new Date(row.Timestamp).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}); const det = parseComplexJSON(row.Details); let cols = [];
 
           if (type === 'workouts') { 
-              const typeStr = det.type || det.workout || 'N/A';
-              const durStr = det.duration ? `(${det.duration}m)` : '';
-              const muscStr = (det.muscles || [det['muscle group']]).filter(Boolean).join(', ') || '-';
+              const typeStr = det.type || det.workout || 'N/A'; const durStr = det.duration ? `(${det.duration}m)` : ''; const muscStr = (det.muscles || [det['muscle group']]).filter(Boolean).join(', ') || '-';
               cols = [date, `<span class="font-medium">${typeStr}</span> ${durStr}`, muscStr, row.Notes || '-']; 
           } 
           else if (type === 'meals') { cols = [date, `<span class="font-medium">${det.meal || det.food || 'N/A'}</span>`, `${det.calories || 0} kcal, ${det.protein || 0}g protein`, row.Notes || '-']; } 
@@ -1356,12 +1126,9 @@
              if (det.items && Array.isArray(det.items)) { suppList = det.items.map(i => `<span class="font-medium">${i.name}</span> <span class="text-slate-500">(${i.dose})</span>`); } 
              else { suppList = [`<span class="font-medium">${det.name || det.supplement || '-'}</span> <span class="text-slate-500">(${det.dose || det.dosage || '-'})</span>`]; }
              cols = [date, suppList.join('<br>'), row.Notes || '-'];
-          } else if (type === 'invisalign') {
-             cols = [date, `<span class="font-medium ${det.action==='Trays Out'?'text-rose-600':'text-emerald-600'}">${det.action || '-'}</span>`, row.Notes || '-'];
-          }
+          } else if (type === 'invisalign') { cols = [date, `<span class="font-medium ${det.action==='Trays Out'?'text-rose-600':'text-emerald-600'}">${det.action || '-'}</span>`, row.Notes || '-']; }
           
           const actionCol = `<td class="px-4 py-3 text-right whitespace-nowrap"><button onclick="editEntry('${type}', '${row.Timestamp}')" class="text-slate-400 hover:text-brand-600 p-1 transition-colors cursor-pointer" title="Edit"><i class="fa-solid fa-pen"></i></button><button onclick="promptDelete('${type}', '${row.Timestamp}')" class="text-slate-400 hover:text-red-600 p-1 transition-colors ml-2 cursor-pointer" title="Delete"><i class="fa-solid fa-trash"></i></button></td>`;
-
           return `<tr class="hover:bg-slate-50 transition-colors">${cols.map((c, i) => `<td class="px-4 py-3 ${i===0?'whitespace-nowrap text-slate-600': 'text-slate-800'}">${c}</td>`).join('')}${actionCol}</tr>`;
       }).join('');
     }
@@ -1371,30 +1138,18 @@
       document.addEventListener('mouseover', (e) => {
         if (e.target && e.target.classList && e.target.classList.contains('svg-muscle')) {
           const text = e.target.getAttribute('data-tooltip');
-          if (text) {
-            tooltip.textContent = text;
-            tooltip.classList.remove('opacity-0');
-          }
+          if (text) { tooltip.textContent = text; tooltip.classList.remove('opacity-0'); }
         }
       });
-      document.addEventListener('mousemove', (e) => {
-        if (!tooltip.classList.contains('opacity-0')) {
-          tooltip.style.left = (e.clientX + 15) + 'px';
-          tooltip.style.top = (e.clientY + 15) + 'px';
-        }
-      });
-      document.addEventListener('mouseout', (e) => {
-        if (e.target && e.target.classList && e.target.classList.contains('svg-muscle')) tooltip.classList.add('opacity-0');
-      });
+      document.addEventListener('mousemove', (e) => { if (!tooltip.classList.contains('opacity-0')) { tooltip.style.left = (e.clientX + 15) + 'px'; tooltip.style.top = (e.clientY + 15) + 'px'; } });
+      document.addEventListener('mouseout', (e) => { if (e.target && e.target.classList && e.target.classList.contains('svg-muscle')) tooltip.classList.add('opacity-0'); });
     }
 
-    // --- INITIALIZATION ---
     window.onload = () => {
       setupMuscleTooltips();
       setTracker('workouts');
       fetchData();
     };
-
   </script>
 </body>
 </html>
